@@ -100,6 +100,3 @@ npm run start:dev
 | DELETE | /jobs/:jobId/bookmark | Hapus bookmark |
 | GET | /bookmarks | Get semua bookmark saya |
 | DELETE | /authentications | Logout |
-
-## 🗄 Entity Relationship Diagram
-![ERD](ERD-OpenJob-versi-1.png)
