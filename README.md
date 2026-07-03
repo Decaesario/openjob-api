@@ -1,8 +1,8 @@
-# OpenJob RESTful API V1
+# OpenJob RESTful API V2
 Submission Back-End Fundamental dengan JavaScript — Dicoding
 
 ## 📌 Deskripsi Proyek
-Repository ini berisi implementasi RESTful API untuk platform job portal bernama OpenJob, dibangun menggunakan Node.js dan Express.js dengan database PostgreSQL. API ini menyediakan fitur autentikasi JWT, manajemen perusahaan, kategori, lowongan pekerjaan, lamaran, dan bookmark.
+Repository ini berisi implementasi RESTful API untuk platform job portal bernama OpenJob versi 2, dibangun menggunakan Node.js dan Express.js dengan database PostgreSQL. API ini menyediakan fitur autentikasi JWT, manajemen perusahaan, kategori, lowongan pekerjaan, lamaran, bookmark, upload dokumen PDF, Redis caching, dan message broker menggunakan RabbitMQ.
 
 ## 👤 Informasi Pengembang
 **Pangeran Clevario Decaesario (103012400148)**
@@ -15,6 +15,9 @@ Fakultas Informatika — Telkom University, 2025
 - **Authentication**: JWT (Access Token + Refresh Token)
 - **Validation**: Joi
 - **Password Hashing**: bcrypt
+- **File Upload**: Multer
+- **Caching**: Redis (Memurai for Windows)
+- **Message Broker**: RabbitMQ + amqplib
 
 ## ⚙️ Cara Menjalankan
 
@@ -40,6 +43,8 @@ HOST=localhost
 PORT=3000
 ACCESS_TOKEN_KEY=
 REFRESH_TOKEN_KEY=
+REDIS_SERVER=localhost
+RABBITMQ_SERVER=amqp://localhost
 ```
 
 4. Buat database PostgreSQL
@@ -72,6 +77,8 @@ npm run start:dev
 | GET | /jobs/:id | Get job by ID |
 | GET | /jobs/company/:companyId | Get job by company |
 | GET | /jobs/category/:categoryId | Get job by kategori |
+| GET | /documents | Get semua dokumen |
+| GET | /documents/:id | View/download dokumen PDF |
 | POST | /authentications | Login |
 | PUT | /authentications | Refresh token |
 
@@ -99,4 +106,14 @@ npm run start:dev
 | GET | /jobs/:jobId/bookmark/:id | Get bookmark by ID |
 | DELETE | /jobs/:jobId/bookmark | Hapus bookmark |
 | GET | /bookmarks | Get semua bookmark saya |
+| POST | /documents | Upload dokumen PDF |
+| DELETE | /documents/:id | Hapus dokumen |
 | DELETE | /authentications | Logout |
+
+## 🗄 Entity Relationship Diagram
+![ERD](ERD-OpenJob-versi-1.png)
+
+## ✨ Fitur V2
+- **Document Upload** — Upload CV/Resume dalam format PDF (max 5MB)
+- **Redis Caching** — Cache untuk GET companies, users, applications, dan bookmarks dengan header `X-Data-Source`
+- **RabbitMQ** — Publish message ke queue saat ada lamaran baru (non-blocking)
