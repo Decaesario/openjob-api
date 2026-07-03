@@ -2,12 +2,14 @@ import { nanoid } from 'nanoid';
 import pg from 'pg';
 import NotFoundError from '../../exceptions/not-found-error.js';
 import AuthorizationError from '../../exceptions/authorization-error.js';
+import CacheService from '../../cache/redis-service.js';
 
 const { Pool } = pg;
 
 class CompanyRepository {
     constructor() {
         this._pool = new Pool();
+        this._cacheService = new CacheService();
     }
 
     async addCompany({ name, description, location, industry, website, ownerId }) {
@@ -24,30 +26,36 @@ class CompanyRepository {
 
     async getAllCompanies() {
         const query = {
-            text: `SELECT c.id, c.name, c.description, c.location, c.industry, c.website, c.owner_id,
-                    u.name as owner_name
-             FROM companies c
-             LEFT JOIN users u ON c.owner_id = u.id
-             ORDER BY c.created_at DESC`,
+            text: `SELECT id, name, description, location, industry, website
+           FROM companies
+           ORDER BY created_at DESC`,
         };
         const result = await this._pool.query(query);
         return result.rows;
     }
 
     async getCompanyById(id) {
-        const query = {
-            text: `SELECT c.id, c.name, c.description, c.location, c.industry, c.website,
-                    c.owner_id, u.name as owner_name, c.created_at, c.updated_at
-             FROM companies c
-             LEFT JOIN users u ON c.owner_id = u.id
-             WHERE c.id = $1`,
-            values: [id],
-        };
-        const result = await this._pool.query(query);
-        if (!result.rows.length) {
-            throw new NotFoundError('Company tidak ditemukan');
+        const cacheKey = `company:${id}`;
+
+        try {
+            const cached = await this._cacheService.get(cacheKey);
+            return { data: JSON.parse(cached), source: 'cache' };
+        } catch {
+            const query = {
+                text: `SELECT c.id, c.name, c.description, c.location, c.industry, c.website,
+                        c.owner_id, u.name as owner_name, c.created_at, c.updated_at
+                 FROM companies c
+                 LEFT JOIN users u ON c.owner_id = u.id
+                 WHERE c.id = $1`,
+                values: [id],
+            };
+            const result = await this._pool.query(query);
+            if (!result.rows.length) {
+                throw new NotFoundError('Company tidak ditemukan');
+            }
+            await this._cacheService.set(cacheKey, JSON.stringify(result.rows[0]));
+            return { data: result.rows[0], source: 'database' };
         }
-        return result.rows[0];
     }
 
     async updateCompany(id, { name, description, location, industry, website }) {
@@ -62,6 +70,7 @@ class CompanyRepository {
         if (!result.rows.length) {
             throw new NotFoundError('Company tidak ditemukan');
         }
+        await this._cacheService.delete(`company:${id}`);
         return result.rows[0];
     }
 
@@ -74,6 +83,7 @@ class CompanyRepository {
         if (!result.rows.length) {
             throw new NotFoundError('Company tidak ditemukan');
         }
+        await this._cacheService.delete(`company:${id}`);
     }
 
     async verifyCompanyOwner(id, ownerId) {

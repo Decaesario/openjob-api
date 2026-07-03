@@ -8,6 +8,13 @@ const errorHandler = (err, req, res, next) => {
         });
     }
 
+    if (err.code === '23503') {
+        return res.status(400).json({
+            status: 'failed',
+            message: 'Resource yang direferensikan tidak ditemukan',
+        });
+    }
+
     console.error(err);
     return res.status(500).json({
         status: 'error',

@@ -35,12 +35,13 @@ class BookmarkController {
     async getBookmarksByUser(req, res, next) {
         try {
             const userId = req.user.id;
-            const bookmarks = await bookmarkRepository.getBookmarksByUser(userId);
+            const { data, source } = await bookmarkRepository.getBookmarksByUser(userId);
+            res.setHeader('X-Data-Source', source);
             return sendResponse(res, {
                 code: 200,
                 status: 'success',
                 message: 'Bookmarks berhasil didapatkan',
-                data: { bookmarks },
+                data: { bookmarks: data },
             });
         } catch (err) {
             next(err);

@@ -23,14 +23,12 @@ class JobRepository {
     }
 
     async getAllJobs({ title, companyName } = {}) {
-        let text = `SELECT j.id, j.title, j.description, j.requirements, j.salary_min, j.salary_max,
-                       j.is_salary_visible, j.job_type, j.experience_level, j.location_type,
-                       j.location_city, j.status, j.company_id, j.category_id, j.owner_id,
-                       c.name as company_name, cat.name as category_name
-                FROM jobs j
-                LEFT JOIN companies c ON j.company_id = c.id
-                LEFT JOIN categories cat ON j.category_id = cat.id
-                WHERE 1=1`;
+        let text = `SELECT j.id, j.title, j.description, j.job_type, j.experience_level,
+                     j.location_type, j.location_city, j.salary_min, j.salary_max,
+                     j.is_salary_visible, j.status, j.company_id, j.category_id
+              FROM jobs j
+              LEFT JOIN companies c ON j.company_id = c.id
+              WHERE 1=1`;
         const values = [];
         let paramIndex = 1;
 

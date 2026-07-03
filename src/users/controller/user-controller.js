@@ -18,12 +18,13 @@ class UserController {
 
     async getUserById(req, res, next) {
         try {
-            const user = await userRepository.getUserById(req.params.id);
+            const { data, source } = await userRepository.getUserById(req.params.id);
+            res.setHeader('X-Data-Source', source);
             return sendResponse(res, {
                 code: 200,
                 status: 'success',
                 message: 'User berhasil didapatkan',
-                data: { name: user.name, email: user.email, role: user.role },
+                data: { id: data.id, name: data.name, email: data.email, role: data.role },
             });
         } catch (err) {
             next(err);

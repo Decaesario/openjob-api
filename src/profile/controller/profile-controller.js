@@ -7,7 +7,7 @@ class ProfileController {
     async getProfile(req, res, next) {
         try {
             const userId = req.user.id;
-            const user = await userRepository.getUserById(userId);
+            const { data: user } = await userRepository.getUserById(userId);
             return sendResponse(res, {
                 code: 200,
                 status: 'success',
@@ -22,7 +22,7 @@ class ProfileController {
     async getProfileApplications(req, res, next) {
         try {
             const userId = req.user.id;
-            const applications = await applicationRepository.getApplicationsByUser(userId);
+            const applications = await applicationRepository.getApplicationsByUserForProfile(userId);
             return sendResponse(res, {
                 code: 200,
                 status: 'success',
@@ -37,12 +37,12 @@ class ProfileController {
     async getProfileBookmarks(req, res, next) {
         try {
             const userId = req.user.id;
-            const bookmarks = await bookmarkRepository.getBookmarksByUser(userId);
+            const { data } = await bookmarkRepository.getBookmarksByUser(userId);
             return sendResponse(res, {
                 code: 200,
                 status: 'success',
                 message: 'Profile bookmarks berhasil didapatkan',
-                data: { bookmarks },
+                data: { bookmarks: data },
             });
         } catch (err) {
             next(err);

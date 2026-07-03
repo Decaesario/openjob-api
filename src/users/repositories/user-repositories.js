@@ -4,12 +4,14 @@ import pg from 'pg';
 import InvariantError from '../../exceptions/invariant-error.js';
 import NotFoundError from '../../exceptions/not-found-error.js';
 import AuthenticationError from '../../exceptions/authentication-error.js';
+import CacheService from '../../cache/redis-service.js';
 
 const { Pool } = pg;
 
 class UserRepository {
     constructor() {
         this._pool = new Pool();
+        this._cacheService = new CacheService();
     }
 
     async addUser({ name, email, password, role }) {
@@ -33,15 +35,23 @@ class UserRepository {
     }
 
     async getUserById(id) {
-        const query = {
-            text: 'SELECT id, name, email, role, created_at, updated_at FROM users WHERE id = $1',
-            values: [id],
-        };
-        const result = await this._pool.query(query);
-        if (!result.rows.length) {
-            throw new NotFoundError('User tidak ditemukan');
+        const cacheKey = `user:${id}`;
+
+        try {
+            const cached = await this._cacheService.get(cacheKey);
+            return { data: JSON.parse(cached), source: 'cache' };
+        } catch {
+            const query = {
+                text: 'SELECT id, name, email, role, created_at, updated_at FROM users WHERE id = $1',
+                values: [id],
+            };
+            const result = await this._pool.query(query);
+            if (!result.rows.length) {
+                throw new NotFoundError('User tidak ditemukan');
+            }
+            await this._cacheService.set(cacheKey, JSON.stringify(result.rows[0]));
+            return { data: result.rows[0], source: 'database' };
         }
-        return result.rows[0];
     }
 
     async verifyUserCredentials({ email, password }) {

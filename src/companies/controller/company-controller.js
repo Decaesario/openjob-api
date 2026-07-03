@@ -33,12 +33,13 @@ class CompanyController {
 
   async getCompanyById(req, res, next) {
     try {
-      const company = await companyRepository.getCompanyById(req.params.id);
+      const { data, source } = await companyRepository.getCompanyById(req.params.id);
+      res.setHeader('X-Data-Source', source);
       return sendResponse(res, {
         code: 200,
         status: 'success',
         message: 'Company berhasil didapatkan',
-        data: { id: company.id, name: company.name, description: company.description, location: company.location, industry: company.industry, website: company.website, owner_id: company.owner_id },
+        data: { id: data.id, name: data.name, description: data.description, location: data.location, industry: data.industry, website: data.website, owner_id: data.owner_id },
       });
     } catch (err) {
       next(err);
