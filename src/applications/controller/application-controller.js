@@ -100,7 +100,7 @@ class ApplicationController {
             next(err);
         }
     }
-
+    
     async deleteApplication(req, res, next) {
         try {
             await applicationRepository.verifyApplicationOwner(req.params.id, req.user.id);
